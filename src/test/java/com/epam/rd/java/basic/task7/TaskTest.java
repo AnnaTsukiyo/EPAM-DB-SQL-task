@@ -14,9 +14,11 @@ import org.junit.jupiter.api.*;
 import com.epam.rd.java.basic.task7.db.*;
 import com.epam.rd.java.basic.task7.db.entity.*;
 
-public class TestTask {
+public class TaskTest {
 
 	private static final String CONNECTION_URL = "jdbc:derby:memory:testdb;create=true";
+
+	private static final String SHUTDOWN_URL = "jdbc:derby:;shutdown=true";
 
 	private static final String APP_PROPS_FILE = "app.properties";
 
@@ -47,6 +49,8 @@ public class TestTask {
 
 	private static final String DROP_TEAMS_TABLE = "DROP TABLE teams";
 
+	private static final String DERBY_LOG_FILE = "derby.log";
+
 	private static Connection con;
 	
 	private static String userDefinedAppContent;
@@ -60,8 +64,14 @@ public class TestTask {
 	}
 
 	@AfterAll
-	static void closeConnection() throws SQLException, FileNotFoundException {
+	static void globalTearDown() throws SQLException, IOException {
 		con.close();
+		try {
+			DriverManager.getConnection(SHUTDOWN_URL);
+		} catch (SQLException ex) {
+			System.err.println("Derby shutdown");
+		}
+		Files.delete(Path.of(DERBY_LOG_FILE));
 		
 		try (PrintWriter out = new PrintWriter(APP_PROPS_FILE)) {
 			out.print(userDefinedAppContent);
